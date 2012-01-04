@@ -1,0 +1,65 @@
+#!/bin/sh
+
+# Wyszukiwanie plikow posiadajacych konkretny ciag znakow w nazwie pliku w podanym folderze
+# zarchiwizowanie plikow i zapisanie w podanej sciezce.
+# Przykład użycia: ./skrypt.sh ciagznakow /lokalizacja /zapiszjako.tar.gz
+
+# Sprawdź wprowadzone argumenty
+if [ $# != 3 ]; then
+    echo "\n===================================================
+          \n Wystąpił błąd - podałeś złą liczbę argumentów ($#)
+          \n===================================================\n
+          \n Instrukcja:
+          \n Skrypt służy do archiwizacji plików z konkretnego folderu, w nazwach
+          \n których pojawia się podany ciąg znaków. Pierw wyszukuje pliki,
+          \n następnie zapisuje w archiwum tar.gz z nazwą złożoną z wprowadzonego ciągu znaków.
+          \n
+          \n Należy podać 3 parametry w następującej konwencji:
+          \n szukana_nazwa ścieżka_szukanego_folderu ścieżka_zapisu_archiwum
+          \n na przykład: obraz /home/uzytkownik/zdjecia /home/uzytkownik\n\n"
+    exit
+fi
+
+# Zmienne z argumentów wejściowych
+szukana_fraza=$1
+lokalizacja_szukana=$2
+lokalizacja_archiwum=$3
+
+# Czy wyszukiwana lokalizacja istnieje
+if [ ! -d "$lokalizacja_szukana" ]; then
+    echo "\n=================================================
+          \n Wystąpił błąd: Wyszukiwana ścieżka nie istnieje
+          \n=================================================\n"
+    exit
+fi
+
+# Czy lokalizacja zapisu istnieje
+if [ ! -d "$lokalizacja_archiwum" ]; then
+    echo "\n============================================
+          \n Wystąpił błąd: Ścieżka zapisu nie istnieje
+          \n============================================\n"
+    exit
+fi
+
+# Znajdź pliki zawierające podany ciąg
+pliki=$(find $lokalizacja_szukana -name "*$szukana_fraza*.*")
+
+# Dla każdego odnalezionego pliku wyciągnij jego nazwę ze ścieżki
+for plik in $pliki
+do
+    nazwy_plikow=$nazwy_plikow" "$(basename $plik)
+done
+
+# Sprawdź czy zostały odnalezione jakiekolwiek elementy
+if [ ${#pliki} -eq 0 ]; then
+    echo "\n========================================================================================
+          \n Wystąpił błąd: W podanej lokalizacji nie istnieją pliki zawierające frazę $szukana_fraza
+          \n========================================================================================\n"
+    exit
+fi
+
+# Wejdź do podanego katalogu z plikami
+cd $lokalizacja_szukana
+
+# Spakuj pliki i zapisz
+tar -zcvf $lokalizacja_archiwum"/"$szukana_fraza".tar.gz" $nazwy_plikow
